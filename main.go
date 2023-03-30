@@ -28,6 +28,14 @@ func main() {
 		})
 	})
 
+	// Add user-related endpoints
+	r.POST("/register", func(c *gin.Context) {
+		registerUser(db, c)
+	})
+	r.POST("/login", func(c *gin.Context) {
+		loginUser(db, c)
+	})
+
 	// Resource-related endpoints
 	r.POST("/resources", createResource)
 	r.GET("/resources/:id", getResource)
