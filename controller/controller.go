@@ -1,12 +1,12 @@
-package main
+package controller
 
 import (
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"time"
 )
 
 type User struct {
@@ -43,38 +43,16 @@ func generateJWT(user *User) (string, error) {
 	return token.SignedString([]byte(jwtSecret))
 }
 
-func storeUser(db *sql.DB, user *User) error {
-	query := "INSERT INTO users (email, password, role) VALUES (?, ?, ?)"
-	_, err := db.Exec(query, user.Email, user.Password, user.Role)
-	return err
-}
-
-func getUserByEmail(db *sql.DB, email string) (*User, error) {
-	query := "SELECT id, email, password, role FROM users WHERE email = ?"
-	row := db.QueryRow(query, email)
-
-	user := &User{}
-	err := row.Scan(&user.ID, &user.Email, &user.Password, &user.Role)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
-
-func registerUser(db *sql.DB, c *gin.Context) {
+func RegisterUser(c *gin.Context) {
 	var user User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(400, gin.H{"error": "Invalid request"})
 		return
 	}
 
+	// Hash the password and store the user in the database
 	user.Password = hashPassword(user.Password)
-
-	if err := storeUser(db, &user); err != nil {
-		c.JSON(500, gin.H{"error": "Error storing user"})
-		return
-	}
+	// TODO: Store user in the database
 
 	token, err := generateJWT(&user)
 	if err != nil {
@@ -85,29 +63,69 @@ func registerUser(db *sql.DB, c *gin.Context) {
 	c.JSON(200, gin.H{"token": token})
 }
 
-func loginUser(db *sql.DB, c *gin.Context) {
+func LoginUser(c *gin.Context) {
 	var reqUser User
 	if err := c.ShouldBindJSON(&reqUser); err != nil {
 		c.JSON(400, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	storedUser, err := getUserByEmail(db, reqUser.Email)
-	if err != nil {
+	// TODO: Retrieve the user from the database using the email
+	var storedUser User
+	// You will need to implement a function to retrieve the user from the database.
+
+	if reqUser.Email != storedUser.Email || hashPassword(reqUser.Password) != storedUser.Password {
 		c.JSON(401, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
-	if hashPassword(reqUser.Password) != storedUser.Password {
-		c.JSON(401, gin.H{"error": "Invalid email or password"})
-		return
-	}
-
-	token, err := generateJWT(storedUser)
+	token, err := generateJWT(&storedUser)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Error generating JWT"})
 		return
 	}
 
 	c.JSON(200, gin.H{"token": token})
+}
+
+type Resource struct {
+	ID          int    `json:"id"`
+	Title       string `json:"title"`
+	Author      string `json:"author"`
+	Description string `json:"description"`
+}
+
+func CreateResource(c *gin.Context) {
+	// Implement logic to create a resource in the database
+	// ...
+
+	c.JSON(201, gin.H{"message": "Resource created"})
+}
+
+func GetResource(c *gin.Context) {
+	// Implement logic to get a resource from the database
+	// ...
+
+	resource := Resource{} // Replace with the fetched resource
+	c.JSON(200, resource)
+}
+
+func GetResources(c *gin.Context) {
+	// Implement logic to get all resources from the database
+	// ...
+
+	resources := []Resource{} // Replace with the fetched resources
+	c.JSON(200, resources)
+}
+func UpdateResource(c *gin.Context) {
+	// Implement logic to update a resource in the database
+	// ...
+
+	c.JSON(200, gin.H{"message": "Resource updated"})
+}
+func DeleteResource(c *gin.Context) {
+	// Implement logic to delete a resource from the database
+	// ...
+
+	c.JSON(200, gin.H{"message": "Resource deleted"})
 }

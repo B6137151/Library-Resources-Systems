@@ -1,5 +1,4 @@
-module Library_Resources_Systems
-
+module github.com/B6137151/library-resources-system
 go 1.17
 
 require (
