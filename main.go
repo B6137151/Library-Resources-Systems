@@ -22,6 +22,8 @@ func main() {
 
 	r := gin.Default()
 
+	r.Use(controller.SetDBtoContext(db))
+
 	// Define your API routes here
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
